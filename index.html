@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RGB FILM - Vintage Film Simulation Camera</title>
+  <meta name="description" content="RGB Film is a vintage film simulation camera app with DOS-style UI. Capture moments through decades of film history from 1930 to 2020.">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta property="og:title" content="RGB FILM - Vintage Film Simulation Camera">
+  <meta property="og:description" content="Capture moments through decades of film history. Real-time film simulation from 1930s to 2020s.">
+  <meta property="og:type" content="website">
+  <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID">
+  <style>
+    /* ══════════════════════════════════════════
+       IBM BIOS FONT
+       ══════════════════════════════════════════ */
+    @font-face {
+      font-family: 'IBM_BIOS';
+      src: url('fonts/WebPlus_IBM_BIOS.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* ══════════════════════════════════════════
+       RESET & BASE
+       ══════════════════════════════════════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #33ff00;
+      --primary-dim: #1a8800;
+      --primary-bright: #66ff33;
+      --primary-glow: rgba(51, 255, 0, 0.4);
+      --bg: #0a0a0a;
+      --bg-panel: #0d0d0d;
+      --bg-hover: #141414;
+      --border: #33ff00;
+      --font-size: 16px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-dim) var(--bg);
+    }
+
+    body {
+      font-family: 'IBM_BIOS', 'Courier New', monospace;
+      font-size: var(--font-size);
+      line-height: 1.6;
+      background: var(--bg);
+      color: var(--primary);
+      overflow-x: hidden;
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: unset;
+      image-rendering: pixelated;
+    }
+
+    ::selection {
+      background: var(--primary);
+      color: var(--bg);
+    }
+
+    a {
+      color: var(--primary-bright);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-shadow: 0 0 8px var(--primary-glow);
+    }
+
+    /* ══════════════════════════════════════════
+       SCANLINE OVERLAY
+       ══════════════════════════════════════════ */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.12) 2px,
+        rgba(0, 0, 0, 0.12) 4px
+      );
+      pointer-events: none;
+      z-index: 10000;
+    }
+
+    /* CRT Vignette */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 55%,
+        rgba(0, 0, 0, 0.5) 100%
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ══════════════════════════════════════════
+       BOOT SCREEN
+       ══════════════════════════════════════════ */
+    #boot {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: var(--bg);
+      z-index: 20000;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 40px;
+      transition: opacity 0.5s ease;
+    }
+
+    #boot.fade-out {
+      opacity: 0;
+    }
+
+    #boot-text {
+      white-space: pre;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .boot-line {
+      opacity: 0;
+    }
+
+    .boot-line.visible {
+      opacity: 1;
+    }
+
+    .boot-ok {
+      color: var(--primary-bright);
+    }
+
+    .boot-cursor {
+      animation: blink 0.7s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ══════════════════════════════════════════
+       MAIN CONTENT
+       ══════════════════════════════════════════ */
+    #app {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+
+    #app.visible {
+      opacity: 1;
+    }
+
+    /* ══════════════════════════════════════════
+       HEADER
+       ══════════════════════════════════════════ */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--primary-dim);
+      padding: 10px 0;
+      margin-bottom: 40px;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .header-title {
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .theme-btn, .lang-btn {
+      background: none;
+      border: 1px solid var(--primary-dim);
+      color: var(--primary);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .theme-btn:hover, .lang-btn:hover {
+      border-color: var(--primary);
+      background: var(--bg-hover);
+      text-shadow: 0 0 6px var(--primary-glow);
+    }
+
+    .theme-btn.active {
+      background: var(--primary);
+      color: var(--bg);
+    }
+
+    /* ══════════════════════════════════════════
+       NAV
+       ══════════════════════════════════════════ */
+    .nav-bar {
+      border-bottom: 1px solid var(--primary-dim);
+      padding: 6px 0;
+      margin-bottom: 40px;
+      font-size: 14px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .nav-bar a {
+      color: var(--primary);
+      padding: 2px 4px;
+      transition: all 0.15s;
+    }
+
+    .nav-bar a:hover {
+      background: var(--primary);
+      color: var(--bg);
+      text-shadow: none;
+    }
+
+    .nav-sep {
+      color: var(--primary-dim);
+    }
+
+    /* ══════════════════════════════════════════
+       HERO
+       ══════════════════════════════════════════ */
+    .hero {
+      text-align: center;
+      padding: 40px 0 50px;
+    }
+
+    .hero-logo {
+      font-size: 42px;
+      letter-spacing: 12px;
+      font-weight: normal;
+      text-shadow:
+        0 0 10px var(--primary-glow),
+        0 0 30px var(--primary-glow),
+        0 0 60px var(--primary-glow);
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .hero-sub {
+      font-size: 16px;
+      color: var(--primary-dim);
+      margin-bottom: 24px;
+    }
+
+    .hero-desc {
+      font-size: 15px;
+      max-width: 560px;
+      margin: 0 auto 32px;
+      line-height: 1.8;
+    }
+
+    .hero-prompt {
+      color: var(--primary-dim);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .hero-prompt span {
+      color: var(--primary);
+    }
+
+    /* Decade strip */
+    .decade-strip {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+      font-size: 13px;
+    }
+
+    .decade-chip {
+      border: 1px solid var(--primary-dim);
+      padding: 3px 8px;
+      color: var(--primary-dim);
+      transition: all 0.2s;
+    }
+
+    .decade-chip:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      text-shadow: 0 0 6px var(--primary-glow);
+    }
+
+    /* Download button */
+    .dl-btn {
+      display: inline-block;
+      border: 2px solid var(--primary);
+      padding: 10px 28px;
+      font-family: inherit;
+      font-size: 16px;
+      color: var(--primary);
+      background: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      text-shadow: 0 0 6px var(--primary-glow);
+    }
+
+    .dl-btn:hover {
+      background: var(--primary);
+      color: var(--bg);
+      text-shadow: none;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    /* ══════════════════════════════════════════
+       SECTION TITLES
+       ══════════════════════════════════════════ */
+    .section-divider {
+      color: var(--primary-dim);
+      font-size: 14px;
+      margin: 60px 0 24px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .section-title-text {
+      color: var(--primary);
+    }
+
+    /* ══════════════════════════════════════════
+       DOS BOX
+       ══════════════════════════════════════════ */
+    .dos-box {
+      border: 1px solid var(--primary-dim);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .dos-box:hover {
+      border-color: var(--primary);
+    }
+
+    .dos-box-title {
+      position: absolute;
+      top: -0.65em;
+      left: 12px;
+      padding: 0 8px;
+      background: var(--bg);
+      font-size: 13px;
+      color: var(--primary-bright);
+    }
+
+    .dos-box p {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--primary-dim);
+    }
+
+    /* ══════════════════════════════════════════
+       PRESET TABLE
+       ══════════════════════════════════════════ */
+    .preset-section {
+      margin-bottom: 48px;
+    }
+
+    .preset-prompt {
+      font-size: 14px;
+      color: var(--primary-dim);
+      margin-bottom: 16px;
+    }
+
+    .preset-prompt span {
+      color: var(--primary);
+    }
+
+    .preset-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .preset-table th {
+      text-align: left;
+      padding: 6px 12px;
+      border-bottom: 1px double var(--primary-dim);
+      color: var(--primary-bright);
+      font-weight: normal;
+    }
+
+    .preset-table td {
+      padding: 5px 12px;
+      border-bottom: 1px solid #1a1a1a;
+      color: var(--primary-dim);
+      transition: all 0.15s;
+    }
+
+    .preset-table tr:hover td {
+      color: var(--primary);
+      background: var(--bg-hover);
+    }
+
+    .preset-table .year-col {
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .preset-table .style-col {
+      white-space: nowrap;
+    }
+
+    .preset-footer {
+      font-size: 13px;
+      color: var(--primary-dim);
+      padding-top: 10px;
+      border-top: 1px solid #1a1a1a;
+      margin-top: 2px;
+    }
+
+    /* ══════════════════════════════════════════
+       FEATURE GRID
+       ══════════════════════════════════════════ */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .feature-card {
+      border: 1px solid var(--primary-dim);
+      padding: 16px 18px;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--primary);
+      background: var(--bg-hover);
+    }
+
+    .feature-card-title {
+      font-size: 14px;
+      color: var(--primary-bright);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-card-title::before {
+      content: '>';
+      color: var(--primary);
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--primary-dim);
+      line-height: 1.7;
+    }
+
+    .feature-card:hover p {
+      color: var(--primary);
+    }
+
+    /* ══════════════════════════════════════════
+       SCREENSHOT GALLERY
+       ══════════════════════════════════════════ */
+    .gallery {
+      margin-bottom: 48px;
+    }
+
+    .gallery-scroll {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding: 10px 0 20px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-dim) transparent;
+    }
+
+    .gallery-item {
+      flex: 0 0 auto;
+      width: 200px;
+      border: 1px solid var(--primary-dim);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .gallery-item:hover {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      display: block;
+    }
+
+    .gallery-placeholder {
+      width: 200px;
+      height: 360px;
+      border: 1px dashed var(--primary-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      font-size: 13px;
+      color: var(--primary-dim);
+      text-align: center;
+      padding: 12px;
+    }
+
+    /* ══════════════════════════════════════════
+       SPECS
+       ══════════════════════════════════════════ */
+    .specs {
+      font-size: 14px;
+      margin-bottom: 48px;
+    }
+
+    .specs-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .specs-list li {
+      padding: 4px 0;
+      color: var(--primary-dim);
+      display: flex;
+      gap: 12px;
+    }
+
+    .specs-list li::before {
+      content: '\251C\2500';
+      color: var(--primary-dim);
+      flex-shrink: 0;
+    }
+
+    .specs-list li:last-child::before {
+      content: '\2514\2500';
+    }
+
+    .specs-list li span {
+      color: var(--primary);
+    }
+
+    /* ══════════════════════════════════════════
+       DOWNLOAD CTA
+       ══════════════════════════════════════════ */
+    .download-section {
+      text-align: center;
+      padding: 36px 0;
+      border: 2px solid var(--primary-dim);
+      margin-bottom: 48px;
+      position: relative;
+    }
+
+    .download-section::before {
+      content: ' DOWNLOAD ';
+      position: absolute;
+      top: -0.65em;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0 12px;
+      background: var(--bg);
+      color: var(--primary-bright);
+      font-size: 14px;
+    }
+
+    .download-desc {
+      font-size: 15px;
+      margin-bottom: 20px;
+      color: var(--primary-dim);
+    }
+
+    .download-req {
+      font-size: 12px;
+      color: var(--primary-dim);
+      margin-top: 16px;
+    }
+
+    /* ══════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════ */
+    footer {
+      border-top: 1px solid var(--primary-dim);
+      padding: 20px 0;
+      font-size: 13px;
+      color: var(--primary-dim);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    footer a {
+      color: var(--primary-dim);
+    }
+
+    footer a:hover {
+      color: var(--primary);
+    }
+
+    /* ══════════════════════════════════════════
+       BLINKING CURSOR
+       ══════════════════════════════════════════ */
+    .cursor::after {
+      content: '\2588';
+      animation: blink 0.7s step-end infinite;
+      margin-left: 2px;
+    }
+
+    /* ══════════════════════════════════════════
+       GLOW PULSE
+       ══════════════════════════════════════════ */
+    @keyframes glow-pulse {
+      0%, 100% { text-shadow: 0 0 10px var(--primary-glow), 0 0 30px var(--primary-glow); }
+      50% { text-shadow: 0 0 14px var(--primary-glow), 0 0 40px var(--primary-glow), 0 0 60px var(--primary-glow); }
+    }
+
+    .glow-pulse {
+      animation: glow-pulse 3s ease-in-out infinite;
+    }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════ */
+    @media (max-width: 680px) {
+      :root { --font-size: 14px; }
+
+      #boot { padding: 20px; }
+      #boot-text { font-size: 13px; }
+
+      .hero-logo {
+        font-size: 28px;
+        letter-spacing: 8px;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .preset-table { font-size: 12px; }
+      .preset-table th, .preset-table td { padding: 4px 8px; }
+
+      .nav-bar { font-size: 13px; }
+
+      .gallery-item, .gallery-placeholder {
+        width: 160px;
+      }
+
+      .gallery-placeholder {
+        height: 288px;
+      }
+
+      header { position: relative; }
+    }
+
+    @media (max-width: 400px) {
+      .hero-logo {
+        font-size: 22px;
+        letter-spacing: 6px;
+      }
+
+      .header-controls {
+        flex-wrap: wrap;
+      }
+
+      .decade-strip {
+        gap: 2px;
+      }
+
+      .decade-chip {
+        font-size: 11px;
+        padding: 2px 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       BOOT SCREEN
+       ═══════════════════════════════════════════ -->
+  <div id="boot">
+    <div id="boot-text"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- HEADER -->
+    <header>
+      <div class="header-inner">
+        <div class="header-title">
+          <span style="color:var(--primary-bright)">~/rgbfilm $</span> <span class="cursor" id="header-cursor">ls</span>
+        </div>
+        <div class="header-controls">
+          <button class="theme-btn active" data-theme="phosphor" title="Phosphor Green">PHOSPHOR</button>
+          <button class="theme-btn" data-theme="amber" title="Amber Orange">AMBER</button>
+          <button class="theme-btn" data-theme="arctic" title="Arctic Blue">ARCTIC</button>
+          <button class="theme-btn" data-theme="pop" title="Pop Cyan">POP</button>
+          <span style="color:var(--primary-dim)">|</span>
+          <button class="lang-btn" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="ko">KO</button>
+          <button class="lang-btn" data-lang="ja">JA</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAV -->
+    <nav class="nav-bar">
+      <a href="#about" data-i18n="navAbout">[ABOUT]</a>
+      <span class="nav-sep">/</span>
+      <a href="#presets" data-i18n="navPresets">[PRESETS]</a>
+      <span class="nav-sep">/</span>
+      <a href="#features" data-i18n="navFeatures">[FEATURES]</a>
+      <span class="nav-sep">/</span>
+      <a href="#specs" data-i18n="navSpecs">[SPECS]</a>
+      <span class="nav-sep">/</span>
+      <a href="#download" data-i18n="navDownload">[DOWNLOAD]</a>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+      <h1 class="hero-logo glow-pulse">RGBF</h1>
+      <p class="hero-sub" data-i18n="heroSub">VINTAGE FILM SIMULATION CAMERA</p>
+      <p class="hero-desc" data-i18n="heroDesc">Capture moments through decades of film history. From 1930s newsreels to modern digital &mdash; every era at your fingertips.</p>
+
+      <div class="decade-strip">
+        <span class="decade-chip">1930</span>
+        <span class="decade-chip">1940</span>
+        <span class="decade-chip">1950</span>
+        <span class="decade-chip">1960</span>
+        <span class="decade-chip">1970</span>
+        <span class="decade-chip">1980</span>
+        <span class="decade-chip">1990</span>
+        <span class="decade-chip">2000</span>
+        <span class="decade-chip">2010</span>
+        <span class="decade-chip">2020</span>
+      </div>
+
+      <a href="#download" class="dl-btn" data-i18n="heroCta">DOWNLOAD ON APP STORE</a>
+    </section>
+
+    <!-- ABOUT -->
+    <div class="section-divider" id="about">
+      <span class="section-title-text" data-i18n="aboutTitle">[ ABOUT ]</span>
+      <span> ────────────────────────────────────────────────────</span>
+    </div>
+
+    <div class="dos-box">
+      <span class="dos-box-title">RGBFILM.TXT</span>
+      <p data-i18n="aboutP1">
+        RGB Film faithfully simulates vintage film photography from the 1930s to 2020s. Every decade has its own unique character &mdash; grain, color palette, scanlines, interlace, and more.
+      </p>
+      <br>
+      <p data-i18n="aboutP2">
+        All effects are processed in real-time through Metal GPU acceleration, delivering a live viewfinder experience that feels like looking through a vintage camera. The entire interface is built with an authentic DOS aesthetic &mdash; because great photography deserves a great interface.
+      </p>
+    </div>
+
+    <!-- PRESETS -->
+    <div class="section-divider" id="presets">
+      <span class="section-title-text" data-i18n="presetsTitle">[ FILM PRESETS ]</span>
+      <span> ─────────────────────────────────────────────</span>
+    </div>
+
+    <div class="preset-section">
+      <div class="preset-prompt">
+        <span>~/rgbfilm/presets $</span> <span data-i18n="presetCmd">ls -la</span>
+      </div>
+
+      <table class="preset-table">
+        <thead>
+          <tr>
+            <th data-i18n="presetYear">YEAR</th>
+            <th data-i18n="presetStyle">STYLE</th>
+            <th data-i18n="presetEffects">EFFECTS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="year-col">1930</td>
+            <td class="style-col" data-i18n="s1930">Newsreel</td>
+            <td data-i18n="e1930">B&amp;W &middot; Film Grain &middot; Flicker &middot; Lo-fi Audio</td>
+          </tr>
+          <tr>
+            <td class="year-col">1940</td>
+            <td class="style-col" data-i18n="s1940">Golden Age</td>
+            <td data-i18n="e1940">Sepia &middot; Vignette &middot; Lo-fi Audio</td>
+          </tr>
+          <tr>
+            <td class="year-col">1950</td>
+            <td class="style-col" data-i18n="s1950">Television</td>
+            <td data-i18n="e1950">B&amp;W &middot; Scanlines &middot; Interlace &middot; Grain</td>
+          </tr>
+          <tr>
+            <td class="year-col">1960</td>
+            <td class="style-col" data-i18n="s1960">Technicolor</td>
+            <td data-i18n="e1960">Warm Tones &middot; Grain &middot; Vignette</td>
+          </tr>
+          <tr>
+            <td class="year-col">1970</td>
+            <td class="style-col" data-i18n="s1970">New Wave</td>
+            <td data-i18n="e1970">Saturated &middot; RGB Lines &middot; CRT &middot; Interlace</td>
+          </tr>
+          <tr>
+            <td class="year-col">1980</td>
+            <td class="style-col" data-i18n="s1980">VHS Era</td>
+            <td data-i18n="e1980">Desaturated &middot; Grain &middot; Soft Focus</td>
+          </tr>
+          <tr>
+            <td class="year-col">1990</td>
+            <td class="style-col" data-i18n="s1990">Digital Dawn</td>
+            <td data-i18n="e1990">RGB Glitch &middot; Channel Shift &middot; Row Noise</td>
+          </tr>
+          <tr>
+            <td class="year-col">2000</td>
+            <td class="style-col" data-i18n="s2000">Early DSLR</td>
+            <td data-i18n="e2000">Clean Digital</td>
+          </tr>
+          <tr>
+            <td class="year-col">2010</td>
+            <td class="style-col" data-i18n="s2010">iPhone 3GS</td>
+            <td data-i18n="e2010">Early Mobile &middot; Low-res &middot; Warm Cast</td>
+          </tr>
+          <tr>
+            <td class="year-col">2020</td>
+            <td class="style-col" data-i18n="s2020">Computational</td>
+            <td data-i18n="e2020">Default</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="preset-footer" data-i18n="presetFooter">10 preset(s) found. Use intensity slider to blend effects.</div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="section-divider" id="features">
+      <span class="section-title-text" data-i18n="featuresTitle">[ FEATURES ]</span>
+      <span> ──────────────────────────────────────────────────</span>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-card-title" data-i18n="feat1Title">FILM SIMULATION</div>
+        <p data-i18n="feat1Desc">11 decade presets with LUT color grading, overlay effects, and per-era audio processing. Each preset captures the authentic feel of its era.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-title" data-i18n="feat2Title">REAL-TIME GPU</div>
+        <p data-i18n="feat2Desc">Metal compute shaders power the entire filter pipeline &mdash; zero-lag live preview with CRT distortion, scanlines, interlace, and glitch effects.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-title" data-i18n="feat3Title">BEAUTY FILTER</div>
+        <p data-i18n="feat3Desc">AI face landmark detection with Vision framework. Adjustable cheek, jaw, and chin slimming with smooth, jitter-free real-time processing.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-title" data-i18n="feat4Title">DOS INTERFACE</div>
+        <p data-i18n="feat4Desc">4 authentic retro themes &mdash; Phosphor, Amber, Arctic, and Pop. Full DOS-style UI with custom components, scanline overlays, and CRT frame.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-title" data-i18n="feat5Title">PHOTO &amp; VIDEO</div>
+        <p data-i18n="feat5Desc">Capture photos and record video with all filters applied in real-time. H.264 encoding with EXIF metadata and GPS location stamping.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-title" data-i18n="feat6Title">MULTILINGUAL</div>
+        <p data-i18n="feat6Desc">Full localization in English, Korean, Japanese, Chinese Simplified and Traditional. Per-language pixel fonts for authentic display.</p>
+      </div>
+    </div>
+
+    <!-- GALLERY -->
+    <div class="section-divider" id="gallery">
+      <span class="section-title-text" data-i18n="galleryTitle">[ GALLERY ]</span>
+      <span> ──────────────────────────────────────────────────</span>
+    </div>
+
+    <div class="gallery">
+      <div class="gallery-scroll" id="gallery-scroll">
+        <div class="gallery-placeholder">SCREENSHOT<br>COMING SOON<br>─────<br>images/<br>*.png</div>
+        <div class="gallery-placeholder">SCREENSHOT<br>COMING SOON<br>─────<br>images/<br>*.png</div>
+        <div class="gallery-placeholder">SCREENSHOT<br>COMING SOON<br>─────<br>images/<br>*.png</div>
+        <div class="gallery-placeholder">SCREENSHOT<br>COMING SOON<br>─────<br>images/<br>*.png</div>
+        <div class="gallery-placeholder">SCREENSHOT<br>COMING SOON<br>─────<br>images/<br>*.png</div>
+      </div>
+    </div>
+
+    <!-- SPECS -->
+    <div class="section-divider" id="specs">
+      <span class="section-title-text" data-i18n="specsTitle">[ SYSTEM REQUIREMENTS ]</span>
+      <span> ──────────────────────────────────────</span>
+    </div>
+
+    <div class="specs">
+      <ul class="specs-list">
+        <li data-i18n="spec1"><span>Platform</span>: iOS 16.0+</li>
+        <li data-i18n="spec2"><span>GPU</span>: Metal compatible device</li>
+        <li data-i18n="spec3"><span>Camera</span>: Front &amp; rear camera</li>
+        <li data-i18n="spec4"><span>Capture</span>: 4:3 (1920x1440)</li>
+        <li data-i18n="spec5"><span>Video</span>: H.264 / AAC @ 24fps</li>
+        <li data-i18n="spec6"><span>Languages</span>: EN, KO, JA, ZH-Hans, ZH-Hant</li>
+      </ul>
+    </div>
+
+    <!-- DOWNLOAD -->
+    <div class="section-divider" id="download">
+      <span class="section-title-text" data-i18n="downloadTitle">[ DOWNLOAD ]</span>
+      <span> ──────────────────────────────────────────────────</span>
+    </div>
+
+    <div class="download-section">
+      <p class="download-desc" data-i18n="downloadDesc">Ready to capture in vintage film?</p>
+      <a href="#" class="dl-btn" data-i18n="downloadCta">DOWNLOAD ON APP STORE</a>
+      <p class="download-req" data-i18n="downloadReq">Requires iOS 16.0 or later &middot; Free</p>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <span>&copy; 2024 Analog Lab</span>
+      <div>
+        <a href="#" data-i18n="footerPrivacy">Privacy</a>
+        <span style="color:var(--primary-dim)"> &middot; </span>
+        <a href="#" data-i18n="footerTerms">Terms</a>
+        <span style="color:var(--primary-dim)"> &middot; </span>
+        <a href="mailto:contact@analoglab.app" data-i18n="footerContact">Contact</a>
+      </div>
+    </footer>
+
+  </div><!-- #app -->
+
+  <script>
+    /* ══════════════════════════════════════════
+       THEMES
+       ══════════════════════════════════════════ */
+    const THEMES = {
+      phosphor: {
+        primary: '#33ff00', dim: '#1a8800', bright: '#66ff33',
+        glow: 'rgba(51,255,0,0.4)', bg: '#0a0a0a'
+      },
+      amber: {
+        primary: '#ffb000', dim: '#906300', bright: '#ffc233',
+        glow: 'rgba(255,176,0,0.4)', bg: '#0a0a0a'
+      },
+      arctic: {
+        primary: '#00bfff', dim: '#006a8e', bright: '#33ccff',
+        glow: 'rgba(0,191,255,0.4)', bg: '#0a0a0a'
+      },
+      pop: {
+        primary: '#ff6ac1', dim: '#993f73', bright: '#ff8dd3',
+        glow: 'rgba(255,106,193,0.4)', bg: '#1a1a2e'
+      }
+    };
+
+    function applyTheme(name) {
+      const t = THEMES[name];
+      if (!t) return;
+      const r = document.documentElement.style;
+      r.setProperty('--primary', t.primary);
+      r.setProperty('--primary-dim', t.dim);
+      r.setProperty('--primary-bright', t.bright);
+      r.setProperty('--primary-glow', t.glow);
+      r.setProperty('--bg', t.bg);
+      r.setProperty('--bg-panel', t.bg === '#0a0a0a' ? '#0d0d0d' : '#1e1e38');
+      r.setProperty('--bg-hover', t.bg === '#0a0a0a' ? '#141414' : '#24243e');
+      r.setProperty('--border', t.primary);
+      document.body.style.background = t.bg;
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === name);
+      });
+      localStorage.setItem('rgbf-theme', name);
+    }
+
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+    });
+
+    /* ══════════════════════════════════════════
+       LOCALIZATION
+       ══════════════════════════════════════════ */
+    const I18N = {
+      en: {
+        navAbout: '[ABOUT]', navPresets: '[PRESETS]', navFeatures: '[FEATURES]',
+        navSpecs: '[SPECS]', navDownload: '[DOWNLOAD]',
+        heroSub: 'VINTAGE FILM SIMULATION CAMERA',
+        heroDesc: 'Capture moments through decades of film history. From 1930s newsreels to modern digital \u2014 every era at your fingertips.',
+        heroCta: 'DOWNLOAD ON APP STORE',
+        aboutTitle: '[ ABOUT ]',
+        aboutP1: 'RGB Film faithfully simulates vintage film photography from the 1930s to 2020s. Every decade has its own unique character \u2014 grain, color palette, scanlines, interlace, and more.',
+        aboutP2: 'All effects are processed in real-time through Metal GPU acceleration, delivering a live viewfinder experience that feels like looking through a vintage camera. The entire interface is built with an authentic DOS aesthetic \u2014 because great photography deserves a great interface.',
+        presetsTitle: '[ FILM PRESETS ]', presetCmd: 'ls -la',
+        presetYear: 'YEAR', presetStyle: 'STYLE', presetEffects: 'EFFECTS',
+        s1930: 'Newsreel', e1930: 'B&W \u00b7 Film Grain \u00b7 Flicker \u00b7 Lo-fi Audio',
+        s1940: 'Golden Age', e1940: 'Sepia \u00b7 Vignette \u00b7 Lo-fi Audio',
+        s1950: 'Television', e1950: 'B&W \u00b7 Scanlines \u00b7 Interlace \u00b7 Grain',
+        s1960: 'Technicolor', e1960: 'Warm Tones \u00b7 Grain \u00b7 Vignette',
+        s1970: 'New Wave', e1970: 'Saturated \u00b7 RGB Lines \u00b7 CRT \u00b7 Interlace',
+        s1980: 'VHS Era', e1980: 'Desaturated \u00b7 Grain \u00b7 Soft Focus',
+        s1990: 'Digital Dawn', e1990: 'RGB Glitch \u00b7 Channel Shift \u00b7 Row Noise',
+        s2000: 'Early DSLR', e2000: 'Clean Digital',
+        s2010: 'iPhone 3GS', e2010: 'Early Mobile \u00b7 Low-res \u00b7 Warm Cast',
+        s2020: 'Computational', e2020: 'Default',
+        presetFooter: '10 preset(s) found. Use intensity slider to blend effects.',
+        featuresTitle: '[ FEATURES ]',
+        feat1Title: 'FILM SIMULATION', feat1Desc: '11 decade presets with LUT color grading, overlay effects, and per-era audio processing. Each preset captures the authentic feel of its era.',
+        feat2Title: 'REAL-TIME GPU', feat2Desc: 'Metal compute shaders power the entire filter pipeline \u2014 zero-lag live preview with CRT distortion, scanlines, interlace, and glitch effects.',
+        feat3Title: 'BEAUTY FILTER', feat3Desc: 'AI face landmark detection with Vision framework. Adjustable cheek, jaw, and chin slimming with smooth, jitter-free real-time processing.',
+        feat4Title: 'DOS INTERFACE', feat4Desc: '4 authentic retro themes \u2014 Phosphor, Amber, Arctic, and Pop. Full DOS-style UI with custom components, scanline overlays, and CRT frame.',
+        feat5Title: 'PHOTO & VIDEO', feat5Desc: 'Capture photos and record video with all filters applied in real-time. H.264 encoding with EXIF metadata and GPS location stamping.',
+        feat6Title: 'MULTILINGUAL', feat6Desc: 'Full localization in English, Korean, Japanese, Chinese Simplified and Traditional. Per-language pixel fonts for authentic display.',
+        galleryTitle: '[ GALLERY ]',
+        specsTitle: '[ SYSTEM REQUIREMENTS ]',
+        spec1: '<span>Platform</span>: iOS 16.0+',
+        spec2: '<span>GPU</span>: Metal compatible device',
+        spec3: '<span>Camera</span>: Front & rear camera',
+        spec4: '<span>Capture</span>: 4:3 (1920\u00d71440)',
+        spec5: '<span>Video</span>: H.264 / AAC @ 24fps',
+        spec6: '<span>Languages</span>: EN, KO, JA, ZH-Hans, ZH-Hant',
+        downloadTitle: '[ DOWNLOAD ]',
+        downloadDesc: 'Ready to capture in vintage film?',
+        downloadCta: 'DOWNLOAD ON APP STORE',
+        downloadReq: 'Requires iOS 16.0 or later \u00b7 Free',
+        footerPrivacy: 'Privacy', footerTerms: 'Terms', footerContact: 'Contact'
+      },
+      ko: {
+        navAbout: '[소개]', navPresets: '[프리셋]', navFeatures: '[기능]',
+        navSpecs: '[사양]', navDownload: '[다운로드]',
+        heroSub: '\ube48\ud2f0\uc9c0 \ud544\ub984 \uc2dc\ubbac\ub808\uc774\uc158 \uce74\uba54\ub77c',
+        heroDesc: '\ud544\ub984\uc758 \uc2dc\ub300\ub97c \ub2f4\ub294 \uce74\uba54\ub77c. 1930\ub144\ub300 \ub274\uc2a4\ub9b4\ubd80\ud130 \ud604\ub300 \ub514\uc9c0\ud138\uae4c\uc9c0 \u2014 \ubaa8\ub4e0 \uc2dc\ub300\ub97c \ub2f9\uc2e0\uc758 \uc190\ub05d\uc5d0.',
+        heroCta: 'APP STORE\uc5d0\uc11c \ub2e4\uc6b4\ub85c\ub4dc',
+        aboutTitle: '[ \uc18c\uac1c ]',
+        aboutP1: 'RGB Film\uc740 1930\ub144\ub300\ubd80\ud130 2020\ub144\ub300\uae4c\uc9c0\uc758 \ube48\ud2f0\uc9c0 \ud544\ub984 \uc0ac\uc9c4\uc744 \ucda9\uc2e4\ud788 \uc7ac\ud604\ud569\ub2c8\ub2e4. \uac01 \uc2dc\ub300\ub9cc\uc758 \uace0\uc720\ud55c \uc9c8\uac10 \u2014 \uadf8\ub808\uc778, \uc0c9\uac10, \uc2a4\uce94\ub77c\uc778, \uc778\ud130\ub808\uc774\uc2a4 \ub4f1\uc744 \uc81c\uacf5\ud569\ub2c8\ub2e4.',
+        aboutP2: '\ubaa8\ub4e0 \ud6a8\uacfc\ub294 Metal GPU \uac00\uc18d\uc744 \ud1b5\ud574 \uc2e4\uc2dc\uac04\uc73c\ub85c \ucc98\ub9ac\ub418\uba70, \ube48\ud2f0\uc9c0 \uce74\uba54\ub77c\ub97c \ud1b5\ud574 \ubcf4\ub294 \ub4ef\ud55c \ub77c\uc774\ube0c \ubdf0\ud30c\uc778\ub354 \uacbd\ud5d8\uc744 \uc81c\uacf5\ud569\ub2c8\ub2e4. \uc815\ud1b5 DOS \uc2a4\ud0c0\uc77c\uc758 \uc778\ud130\ud398\uc774\uc2a4 \u2014 \uba4b\uc9c4 \uc0ac\uc9c4\uc5d0\ub294 \uba4b\uc9c4 \uc778\ud130\ud398\uc774\uc2a4\uac00 \ud544\uc694\ud558\ub2c8\uae4c\uc694.',
+        presetsTitle: '[ \ud544\ub984 \ud504\ub9ac\uc14b ]', presetCmd: 'ls -la',
+        presetYear: '\uc5f0\ub3c4', presetStyle: '\uc2a4\ud0c0\uc77c', presetEffects: '\ud6a8\uacfc',
+        s1930: '\ub274\uc2a4\ub9b4', e1930: '\ud751\ubc31 \u00b7 \ud544\ub984 \uadf8\ub808\uc778 \u00b7 \ud50c\ub9ac\ucee4 \u00b7 \ub85c\ud30c\uc774 \uc624\ub514\uc624',
+        s1940: '\ud669\uae08\uae30', e1940: '\uc138\ud53c\uc544 \u00b7 \ube44\ub124\ud2b8 \u00b7 \ub85c\ud30c\uc774 \uc624\ub514\uc624',
+        s1950: '\ud154\ub808\ube44\uc804', e1950: '\ud751\ubc31 \u00b7 \uc2a4\uce94\ub77c\uc778 \u00b7 \uc778\ud130\ub808\uc774\uc2a4 \u00b7 \uadf8\ub808\uc778',
+        s1960: '\ud14c\ud06c\ub2c8\ucee4\ub7ec', e1960: '\ub530\ub73b\ud55c \ud1a4 \u00b7 \uadf8\ub808\uc778 \u00b7 \ube44\ub124\ud2b8',
+        s1970: '\ub274 \uc6e8\uc774\ube0c', e1970: '\uace0\ucc44\ub3c4 \u00b7 RGB \ub77c\uc778 \u00b7 CRT \u00b7 \uc778\ud130\ub808\uc774\uc2a4',
+        s1980: 'VHS \uc2dc\ub300', e1980: '\uc800\ucc44\ub3c4 \u00b7 \uadf8\ub808\uc778 \u00b7 \uc18c\ud504\ud2b8 \ud3ec\ucee4\uc2a4',
+        s1990: '\ub514\uc9c0\ud138 \ub3c4\ub798', e1990: 'RGB \uae00\ub9ac\uce58 \u00b7 \ucc44\ub110 \uc2dc\ud504\ud2b8 \u00b7 \ub85c\uc6b0 \ub178\uc774\uc988',
+        s2000: '\ucd08\uae30 DSLR', e2000: '\ud074\ub9b0 \ub514\uc9c0\ud138',
+        s2010: 'iPhone 3GS', e2010: '\ucd08\uae30 \ubaa8\ubc14\uc77c \u00b7 \uc800\ud574\uc0c1\ub3c4 \u00b7 \ub530\ub73b\ud55c \uc0c9\uac10',
+        s2020: '\ucef4\ud4e8\ud14c\uc774\uc154\ub110', e2020: '\uae30\ubcf8',
+        presetFooter: '10\uac1c\uc758 \ud504\ub9ac\uc14b. \uc778\ud150\uc2dc\ud2f0 \uc2ac\ub77c\uc774\ub354\ub85c \ud6a8\uacfc\ub97c \uc870\uc808\ud558\uc138\uc694.',
+        featuresTitle: '[ \uae30\ub2a5 ]',
+        feat1Title: '\ud544\ub984 \uc2dc\ubbac\ub808\uc774\uc158', feat1Desc: 'LUT \uce74\ub7ec \uadf8\ub808\uc774\ub529, \uc624\ubc84\ub808\uc774 \ud6a8\uacfc, \uc2dc\ub300\ubcc4 \uc624\ub514\uc624 \ucc98\ub9ac\ub97c \ud3ec\ud568\ud55c 11\uac1c \uc5f0\ub300 \ud504\ub9ac\uc14b. \uac01 \ud504\ub9ac\uc14b\uc774 \uc2dc\ub300\uc758 \uc9c4\uc815\uc131\uc744 \ub2f4\uc2b5\ub2c8\ub2e4.',
+        feat2Title: '\uc2e4\uc2dc\uac04 GPU', feat2Desc: 'Metal \ucef4\ud4e8\ud2b8 \uc170\uc774\ub354\uac00 \uc804\uccb4 \ud544\ud130 \ud30c\uc774\ud504\ub77c\uc778\uc744 \uad6c\ub3d9 \u2014 CRT \uc65c\uace1, \uc2a4\uce94\ub77c\uc778, \uc778\ud130\ub808\uc774\uc2a4, \uae00\ub9ac\uce58 \ud6a8\uacfc\ub97c \uc9c0\uc5f0 \uc5c6\uc774 \ub77c\uc774\ube0c \ud504\ub9ac\ubdf0.',
+        feat3Title: '\ubdf0\ud2f0 \ud544\ud130', feat3Desc: 'Vision \ud504\ub808\uc784\uc6cc\ud06c\uc758 AI \uc5bc\uad74 \ub79c\ub4dc\ub9c8\ud06c \uac10\uc9c0. \ubcfc, \ud131, \ud134 \uc2ac\ub9ac\ubc0d\uc744 \ubd80\ub4dc\ub7fd\uace0 \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc2e4\uc2dc\uac04 \ucc98\ub9ac.',
+        feat4Title: 'DOS \uc778\ud130\ud398\uc774\uc2a4', feat4Desc: '4\uac00\uc9c0 \uc815\ud1b5 \ub808\ud2b8\ub85c \ud14c\ub9c8 \u2014 Phosphor, Amber, Arctic, Pop. \ucee4\uc2a4\ud140 \ucef4\ud3ec\ub10c\ud2b8, \uc2a4\uce94\ub77c\uc778 \uc624\ubc84\ub808\uc774, CRT \ud504\ub808\uc784\uc758 DOS \uc2a4\ud0c0\uc77c UI.',
+        feat5Title: '\uc0ac\uc9c4 & \ub3d9\uc601\uc0c1', feat5Desc: '\ubaa8\ub4e0 \ud544\ud130\uac00 \uc801\uc6a9\ub41c \uc0c1\ud0dc\ub85c \uc0ac\uc9c4 \ucd2c\uc601\uacfc \ub3d9\uc601\uc0c1 \ub179\ud654. H.264 \uc778\ucf54\ub529, EXIF \uba54\ud0c0\ub370\uc774\ud130 \ubc0f GPS \uc704\uce58 \uc800\uc7a5.',
+        feat6Title: '\ub2e4\uad6d\uc5b4 \uc9c0\uc6d0', feat6Desc: '\uc601\uc5b4, \ud55c\uad6d\uc5b4, \uc77c\ubcf8\uc5b4, \uc911\uad6d\uc5b4 \uac04\uccb4/\ubc88\uccb4 \uc644\ubcbd \uc9c0\uc6d0. \uc5b8\uc5b4\ubcc4 \ud53d\uc140 \ud3f0\ud2b8\ub85c \uc815\ud1b5 \ub514\uc2a4\ud50c\ub808\uc774.',
+        galleryTitle: '[ \uac24\ub7ec\ub9ac ]',
+        specsTitle: '[ \uc2dc\uc2a4\ud15c \uc694\uad6c\uc0ac\ud56d ]',
+        spec1: '<span>\ud50c\ub7ab\ud3fc</span>: iOS 16.0+',
+        spec2: '<span>GPU</span>: Metal \ud638\ud658 \ub514\ubc14\uc774\uc2a4',
+        spec3: '<span>\uce74\uba54\ub77c</span>: \uc804\uba74 & \ud6c4\uba74 \uce74\uba54\ub77c',
+        spec4: '<span>\ucd2c\uc601</span>: 4:3 (1920\u00d71440)',
+        spec5: '<span>\ub3d9\uc601\uc0c1</span>: H.264 / AAC @ 24fps',
+        spec6: '<span>\uc5b8\uc5b4</span>: EN, KO, JA, ZH-Hans, ZH-Hant',
+        downloadTitle: '[ \ub2e4\uc6b4\ub85c\ub4dc ]',
+        downloadDesc: '\ube48\ud2f0\uc9c0 \ud544\ub984\uc73c\ub85c \ucd2c\uc601\ud560 \uc900\ube44\uac00 \ub418\uc168\ub098\uc694?',
+        downloadCta: 'APP STORE\uc5d0\uc11c \ub2e4\uc6b4\ub85c\ub4dc',
+        downloadReq: 'iOS 16.0 \uc774\uc0c1 \ud544\uc694 \u00b7 \ubb34\ub8cc',
+        footerPrivacy: '\uac1c\uc778\uc815\ubcf4', footerTerms: '\uc774\uc6a9\uc57d\uad00', footerContact: '\ubb38\uc758'
+      },
+      ja: {
+        navAbout: '[\u6982\u8981]', navPresets: '[\u30d7\u30ea\u30bb\u30c3\u30c8]', navFeatures: '[\u6a5f\u80fd]',
+        navSpecs: '[\u4ed5\u69d8]', navDownload: '[\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9]',
+        heroSub: '\u30f4\u30a3\u30f3\u30c6\u30fc\u30b8\u30d5\u30a3\u30eb\u30e0\u30b7\u30df\u30e5\u30ec\u30fc\u30b7\u30e7\u30f3\u30ab\u30e1\u30e9',
+        heroDesc: '\u30d5\u30a3\u30eb\u30e0\u306e\u6642\u4ee3\u3092\u5199\u3059\u30ab\u30e1\u30e9\u30021930\u5e74\u4ee3\u306e\u30cb\u30e5\u30fc\u30b9\u30ea\u30fc\u30eb\u304b\u3089\u73fe\u4ee3\u30c7\u30b8\u30bf\u30eb\u307e\u3067 \u2014 \u3059\u3079\u3066\u306e\u6642\u4ee3\u3092\u3042\u306a\u305f\u306e\u624b\u306b\u3002',
+        heroCta: 'APP STORE\u3067\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9',
+        aboutTitle: '[ \u6982\u8981 ]',
+        aboutP1: 'RGB Film\u306f1930\u5e74\u4ee3\u304b\u30892020\u5e74\u4ee3\u307e\u3067\u306e\u30f4\u30a3\u30f3\u30c6\u30fc\u30b8\u30d5\u30a3\u30eb\u30e0\u5199\u771f\u3092\u5fe0\u5b9f\u306b\u518d\u73fe\u3057\u307e\u3059\u3002\u5404\u6642\u4ee3\u72ec\u81ea\u306e\u8cea\u611f \u2014 \u30b0\u30ec\u30a4\u30f3\u3001\u8272\u5f69\u3001\u30b9\u30ad\u30e3\u30f3\u30e9\u30a4\u30f3\u3001\u30a4\u30f3\u30bf\u30fc\u30ec\u30fc\u30b9\u306a\u3069\u3002',
+        aboutP2: '\u3059\u3079\u3066\u306e\u30a8\u30d5\u30a7\u30af\u30c8\u306fMetal GPU\u30a2\u30af\u30bb\u30e9\u30ec\u30fc\u30b7\u30e7\u30f3\u3067\u30ea\u30a2\u30eb\u30bf\u30a4\u30e0\u51e6\u7406\u3002\u30f4\u30a3\u30f3\u30c6\u30fc\u30b8\u30ab\u30e1\u30e9\u3092\u901a\u3057\u3066\u898b\u308b\u3088\u3046\u306a\u30e9\u30a4\u30d6\u30d3\u30e5\u30fc\u30d5\u30a1\u30a4\u30f3\u30c0\u30fc\u4f53\u9a13\u3002\u6b63\u7d71DOS\u30b9\u30bf\u30a4\u30eb\u306e\u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30fc\u30b9 \u2014 \u7d20\u6674\u3089\u3057\u3044\u5199\u771f\u306b\u306f\u7d20\u6674\u3089\u3057\u3044\u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30fc\u30b9\u3092\u3002',
+        presetsTitle: '[ \u30d5\u30a3\u30eb\u30e0\u30d7\u30ea\u30bb\u30c3\u30c8 ]', presetCmd: 'ls -la',
+        presetYear: '\u5e74\u4ee3', presetStyle: '\u30b9\u30bf\u30a4\u30eb', presetEffects: '\u30a8\u30d5\u30a7\u30af\u30c8',
+        s1930: '\u30cb\u30e5\u30fc\u30b9\u30ea\u30fc\u30eb', e1930: '\u30e2\u30ce\u30af\u30ed \u00b7 \u30d5\u30a3\u30eb\u30e0\u30b0\u30ec\u30a4\u30f3 \u00b7 \u30d5\u30ea\u30c3\u30ab\u30fc \u00b7 Lo-fi\u30aa\u30fc\u30c7\u30a3\u30aa',
+        s1940: '\u9ec4\u91d1\u6642\u4ee3', e1940: '\u30bb\u30d4\u30a2 \u00b7 \u30d3\u30cd\u30c3\u30c8 \u00b7 Lo-fi\u30aa\u30fc\u30c7\u30a3\u30aa',
+        s1950: '\u30c6\u30ec\u30d3\u30b8\u30e7\u30f3', e1950: '\u30e2\u30ce\u30af\u30ed \u00b7 \u30b9\u30ad\u30e3\u30f3\u30e9\u30a4\u30f3 \u00b7 \u30a4\u30f3\u30bf\u30fc\u30ec\u30fc\u30b9 \u00b7 \u30b0\u30ec\u30a4\u30f3',
+        s1960: '\u30c6\u30af\u30cb\u30ab\u30e9\u30fc', e1960: '\u6696\u8272\u7cfb \u00b7 \u30b0\u30ec\u30a4\u30f3 \u00b7 \u30d3\u30cd\u30c3\u30c8',
+        s1970: '\u30cb\u30e5\u30fc\u30a6\u30a7\u30fc\u30d6', e1970: '\u9ad8\u5f69\u5ea6 \u00b7 RGB\u30e9\u30a4\u30f3 \u00b7 CRT \u00b7 \u30a4\u30f3\u30bf\u30fc\u30ec\u30fc\u30b9',
+        s1980: 'VHS\u6642\u4ee3', e1980: '\u4f4e\u5f69\u5ea6 \u00b7 \u30b0\u30ec\u30a4\u30f3 \u00b7 \u30bd\u30d5\u30c8\u30d5\u30a9\u30fc\u30ab\u30b9',
+        s1990: '\u30c7\u30b8\u30bf\u30eb\u9ece\u660e', e1990: 'RGB\u30b0\u30ea\u30c3\u30c1 \u00b7 \u30c1\u30e3\u30f3\u30cd\u30eb\u30b7\u30d5\u30c8 \u00b7 \u30ed\u30a6\u30ce\u30a4\u30ba',
+        s2000: '\u521d\u671fDSLR', e2000: '\u30af\u30ea\u30fc\u30f3\u30c7\u30b8\u30bf\u30eb',
+        s2010: 'iPhone 3GS', e2010: '\u521d\u671f\u30e2\u30d0\u30a4\u30eb \u00b7 \u4f4e\u89e3\u50cf\u5ea6 \u00b7 \u6696\u8272\u7cfb',
+        s2020: '\u30b3\u30f3\u30d4\u30e5\u30c6\u30fc\u30b7\u30e7\u30ca\u30eb', e2020: '\u30c7\u30d5\u30a9\u30eb\u30c8',
+        presetFooter: '10\u500b\u306e\u30d7\u30ea\u30bb\u30c3\u30c8\u3002\u30a4\u30f3\u30c6\u30f3\u30b7\u30c6\u30a3\u30b9\u30e9\u30a4\u30c0\u30fc\u3067\u30a8\u30d5\u30a7\u30af\u30c8\u3092\u8abf\u6574\u3002',
+        featuresTitle: '[ \u6a5f\u80fd ]',
+        feat1Title: '\u30d5\u30a3\u30eb\u30e0\u30b7\u30df\u30e5\u30ec\u30fc\u30b7\u30e7\u30f3', feat1Desc: 'LUT\u30ab\u30e9\u30fc\u30b0\u30ec\u30fc\u30c7\u30a3\u30f3\u30b0\u3001\u30aa\u30fc\u30d0\u30fc\u30ec\u30a4\u30a8\u30d5\u30a7\u30af\u30c8\u3001\u6642\u4ee3\u5225\u30aa\u30fc\u30c7\u30a3\u30aa\u51e6\u7406\u3092\u542b\u308011\u306e\u5e74\u4ee3\u30d7\u30ea\u30bb\u30c3\u30c8\u3002',
+        feat2Title: '\u30ea\u30a2\u30eb\u30bf\u30a4\u30e0GPU', feat2Desc: 'Metal\u30b3\u30f3\u30d4\u30e5\u30fc\u30c8\u30b7\u30a7\u30fc\u30c0\u30fc\u304c\u30d5\u30a3\u30eb\u30bf\u30fc\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u5168\u4f53\u3092\u99c6\u52d5 \u2014 CRT\u6b6a\u307f\u3001\u30b9\u30ad\u30e3\u30f3\u30e9\u30a4\u30f3\u3001\u30a4\u30f3\u30bf\u30fc\u30ec\u30fc\u30b9\u3001\u30b0\u30ea\u30c3\u30c1\u3092\u9045\u5ef6\u306a\u304f\u30e9\u30a4\u30d6\u30d7\u30ec\u30d3\u30e5\u30fc\u3002',
+        feat3Title: '\u30d3\u30e5\u30fc\u30c6\u30a3\u30d5\u30a3\u30eb\u30bf\u30fc', feat3Desc: 'Vision\u30d5\u30ec\u30fc\u30e0\u30ef\u30fc\u30af\u306eAI\u9854\u30e9\u30f3\u30c9\u30de\u30fc\u30af\u691c\u51fa\u3002\u9817\u3001\u984e\u3001\u3042\u3054\u306e\u30b9\u30ea\u30df\u30f3\u30b0\u3092\u6ed1\u3089\u304b\u306b\u30ea\u30a2\u30eb\u30bf\u30a4\u30e0\u51e6\u7406\u3002',
+        feat4Title: 'DOS\u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30fc\u30b9', feat4Desc: '4\u3064\u306e\u6b63\u7d71\u30ec\u30c8\u30ed\u30c6\u30fc\u30de \u2014 Phosphor\u3001Amber\u3001Arctic\u3001Pop\u3002\u30ab\u30b9\u30bf\u30e0\u30b3\u30f3\u30dd\u30fc\u30cd\u30f3\u30c8\u3001\u30b9\u30ad\u30e3\u30f3\u30e9\u30a4\u30f3\u30aa\u30fc\u30d0\u30fc\u30ec\u30a4\u3001CRT\u30d5\u30ec\u30fc\u30e0\u306eDOS\u30b9\u30bf\u30a4\u30ebUI\u3002',
+        feat5Title: '\u5199\u771f & \u52d5\u753b', feat5Desc: '\u3059\u3079\u3066\u306e\u30d5\u30a3\u30eb\u30bf\u30fc\u3092\u9069\u7528\u3057\u305f\u307e\u307e\u5199\u771f\u64ae\u5f71\u3068\u52d5\u753b\u9332\u753b\u3002H.264\u30a8\u30f3\u30b3\u30fc\u30c7\u30a3\u30f3\u30b0\u3001EXIF\u30e1\u30bf\u30c7\u30fc\u30bf\u3001GPS\u4f4d\u7f6e\u60c5\u5831\u4fdd\u5b58\u3002',
+        feat6Title: '\u591a\u8a00\u8a9e\u5bfe\u5fdc', feat6Desc: '\u82f1\u8a9e\u3001\u97d3\u56fd\u8a9e\u3001\u65e5\u672c\u8a9e\u3001\u4e2d\u56fd\u8a9e\u7c21\u4f53\u5b57/\u7e41\u4f53\u5b57\u5b8c\u5168\u5bfe\u5fdc\u3002\u8a00\u8a9e\u5225\u30d4\u30af\u30bb\u30eb\u30d5\u30a9\u30f3\u30c8\u3067\u6b63\u7d71\u30c7\u30a3\u30b9\u30d7\u30ec\u30a4\u3002',
+        galleryTitle: '[ \u30ae\u30e3\u30e9\u30ea\u30fc ]',
+        specsTitle: '[ \u30b7\u30b9\u30c6\u30e0\u8981\u4ef6 ]',
+        spec1: '<span>\u30d7\u30e9\u30c3\u30c8\u30d5\u30a9\u30fc\u30e0</span>: iOS 16.0+',
+        spec2: '<span>GPU</span>: Metal\u5bfe\u5fdc\u30c7\u30d0\u30a4\u30b9',
+        spec3: '<span>\u30ab\u30e1\u30e9</span>: \u524d\u9762 & \u80cc\u9762\u30ab\u30e1\u30e9',
+        spec4: '<span>\u64ae\u5f71</span>: 4:3 (1920\u00d71440)',
+        spec5: '<span>\u52d5\u753b</span>: H.264 / AAC @ 24fps',
+        spec6: '<span>\u8a00\u8a9e</span>: EN, KO, JA, ZH-Hans, ZH-Hant',
+        downloadTitle: '[ \u30c0\u30a6\u30f3\u30ed\u30fc\u30c9 ]',
+        downloadDesc: '\u30f4\u30a3\u30f3\u30c6\u30fc\u30b8\u30d5\u30a3\u30eb\u30e0\u3067\u64ae\u5f71\u3059\u308b\u6e96\u5099\u306f\u3067\u304d\u307e\u3057\u305f\u304b\uff1f',
+        downloadCta: 'APP STORE\u3067\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9',
+        downloadReq: 'iOS 16.0\u4ee5\u964d\u304c\u5fc5\u8981 \u00b7 \u7121\u6599',
+        footerPrivacy: '\u30d7\u30e9\u30a4\u30d0\u30b7\u30fc', footerTerms: '\u5229\u7528\u898f\u7d04', footerContact: '\u304a\u554f\u3044\u5408\u308f\u305b'
+      }
+    };
+
+    let currentLang = 'en';
+
+    function applyLang(lang) {
+      const strings = I18N[lang];
+      if (!strings) return;
+      currentLang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (strings[key] !== undefined) {
+          if (key.startsWith('spec')) {
+            el.innerHTML = strings[key];
+          } else {
+            el.textContent = strings[key];
+          }
+        }
+      });
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.style.borderColor = btn.dataset.lang === lang ? 'var(--primary)' : '';
+        btn.style.color = btn.dataset.lang === lang ? 'var(--primary-bright)' : '';
+      });
+      document.documentElement.lang = lang;
+      localStorage.setItem('rgbf-lang', lang);
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+    });
+
+    /* ══════════════════════════════════════════
+       BOOT SEQUENCE
+       ══════════════════════════════════════════ */
+    const bootLines = [
+      { text: '~ $ rgbfilm --init', delay: 0 },
+      { text: '\n\nrgbfilm v2.0 (analog-lab)\n', delay: 200 },
+      { text: '\n[*] loading camera module ....... ', delay: 400 },
+      { text: 'done', delay: 650, cls: 'boot-ok' },
+      { text: '\n[*] loading lut engine .......... ', delay: 750 },
+      { text: 'done', delay: 1000, cls: 'boot-ok' },
+      { text: '\n[*] initializing metal gpu ...... ', delay: 1100 },
+      { text: 'done', delay: 1350, cls: 'boot-ok' },
+      { text: '\n[*] loading film presets ........ ', delay: 1450 },
+      { text: 'done', delay: 1700, cls: 'boot-ok' },
+      { text: '\n\nall systems ready.', delay: 1900 },
+      { text: '\n~ $ ./start\n', delay: 2100 },
+    ];
+
+    function runBoot() {
+      const bootEl = document.getElementById('boot');
+      const textEl = document.getElementById('boot-text');
+      const app = document.getElementById('app');
+
+      let skipBoot = false;
+
+      function skip() {
+        if (skipBoot) return;
+        skipBoot = true;
+        bootEl.classList.add('fade-out');
+        setTimeout(() => {
+          bootEl.style.display = 'none';
+          app.classList.add('visible');
+        }, 400);
+      }
+
+      bootEl.addEventListener('click', skip);
+      document.addEventListener('keydown', function bootKey(e) {
+        skip();
+        document.removeEventListener('keydown', bootKey);
+      });
+
+      bootLines.forEach((line, i) => {
+        setTimeout(() => {
+          if (skipBoot) return;
+          const span = document.createElement('span');
+          span.textContent = line.text;
+          if (line.cls) span.className = line.cls;
+          textEl.appendChild(span);
+        }, line.delay);
+      });
+
+      setTimeout(() => {
+        if (!skipBoot) skip();
+      }, 2800);
+    }
+
+    /* ══════════════════════════════════════════
+       INIT
+       ══════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', () => {
+      // Restore theme
+      const savedTheme = localStorage.getItem('rgbf-theme');
+      if (savedTheme && THEMES[savedTheme]) applyTheme(savedTheme);
+
+      // Detect / restore language
+      const savedLang = localStorage.getItem('rgbf-lang');
+      if (savedLang && I18N[savedLang]) {
+        applyLang(savedLang);
+      } else {
+        const browserLang = navigator.language.split('-')[0];
+        if (I18N[browserLang]) applyLang(browserLang);
+      }
+
+      // Run boot sequence
+      runBoot();
+    });
+  </script>
+
+</body>
+</html>
