@@ -539,40 +539,6 @@
     }
 
     /* ══════════════════════════════════════════
-       SPECS
-       ══════════════════════════════════════════ */
-    .specs {
-      font-size: 14px;
-      margin-bottom: 48px;
-    }
-
-    .specs-list {
-      list-style: none;
-      padding: 0;
-    }
-
-    .specs-list li {
-      padding: 4px 0;
-      color: var(--primary-dim);
-      display: flex;
-      gap: 12px;
-    }
-
-    .specs-list li::before {
-      content: '\251C\2500';
-      color: var(--primary-dim);
-      flex-shrink: 0;
-    }
-
-    .specs-list li:last-child::before {
-      content: '\2514\2500';
-    }
-
-    .specs-list li span {
-      color: var(--primary);
-    }
-
-    /* ══════════════════════════════════════════
        DOWNLOAD CTA
        ══════════════════════════════════════════ */
     .download-section {
@@ -746,8 +712,6 @@
       <span class="nav-sep">/</span>
       <a href="#features" data-i18n="navFeatures">[FEATURES]</a>
       <span class="nav-sep">/</span>
-      <a href="#specs" data-i18n="navSpecs">[SPECS]</a>
-      <span class="nav-sep">/</span>
       <a href="#download" data-i18n="navDownload">[DOWNLOAD]</a>
     </nav>
 
@@ -914,23 +878,6 @@
       </div>
     </div>
 
-    <!-- SPECS -->
-    <div class="section-divider" id="specs">
-      <span class="section-title-text" data-i18n="specsTitle">[ SYSTEM REQUIREMENTS ]</span>
-      <span> ──────────────────────────────────────</span>
-    </div>
-
-    <div class="specs">
-      <ul class="specs-list">
-        <li data-i18n="spec1"><span>Platform</span>: iOS 16.0+</li>
-        <li data-i18n="spec2"><span>GPU</span>: Metal compatible device</li>
-        <li data-i18n="spec3"><span>Camera</span>: Front &amp; rear camera</li>
-        <li data-i18n="spec4"><span>Capture</span>: 4:3 (1920x1440)</li>
-        <li data-i18n="spec5"><span>Video</span>: H.264 / AAC @ 24fps</li>
-        <li data-i18n="spec6"><span>Languages</span>: EN, KO, JA, ZH-Hans, ZH-Hant</li>
-      </ul>
-    </div>
-
     <!-- DOWNLOAD -->
     <div class="section-divider" id="download">
       <span class="section-title-text" data-i18n="downloadTitle">[ DOWNLOAD ]</span>
@@ -945,14 +892,8 @@
 
     <!-- FOOTER -->
     <footer>
-      <span>&copy; 2024 Analog Lab</span>
-      <div>
-        <a href="privacy/" data-i18n="footerPrivacy">Privacy</a>
-        <span style="color:var(--primary-dim)"> &middot; </span>
-        <a href="#" data-i18n="footerTerms">Terms</a>
-        <span style="color:var(--primary-dim)"> &middot; </span>
-        <a href="mailto:contact@analoglab.app" data-i18n="footerContact">Contact</a>
-      </div>
+      <span>&copy; Analog Lab</span>
+      <a href="privacy/" data-i18n="footerPrivacy">Privacy</a>
     </footer>
 
   </div><!-- #app -->
@@ -1009,7 +950,7 @@
     const I18N = {
       en: {
         navAbout: '[ABOUT]', navPresets: '[PRESETS]', navFeatures: '[FEATURES]',
-        navSpecs: '[SPECS]', navDownload: '[DOWNLOAD]',
+        navDownload: '[DOWNLOAD]',
         heroSub: 'VINTAGE FILM SIMULATION CAMERA',
         heroDesc: 'Capture moments through decades of film history. From 1930s newsreels to modern digital \u2014 every era at your fingertips.',
         heroCta: 'DOWNLOAD ON APP STORE',
@@ -1037,22 +978,15 @@
         feat5Title: 'PHOTO & VIDEO', feat5Desc: 'Capture photos and record video with all filters applied in real-time. H.264 encoding with EXIF metadata and GPS location stamping.',
         feat6Title: 'MULTILINGUAL', feat6Desc: 'Full localization in English, Korean, Japanese, Chinese Simplified and Traditional. Per-language pixel fonts for authentic display.',
         galleryTitle: '[ GALLERY ]',
-        specsTitle: '[ SYSTEM REQUIREMENTS ]',
-        spec1: '<span>Platform</span>: iOS 16.0+',
-        spec2: '<span>GPU</span>: Metal compatible device',
-        spec3: '<span>Camera</span>: Front & rear camera',
-        spec4: '<span>Capture</span>: 4:3 (1920\u00d71440)',
-        spec5: '<span>Video</span>: H.264 / AAC @ 24fps',
-        spec6: '<span>Languages</span>: EN, KO, JA, ZH-Hans, ZH-Hant',
         downloadTitle: '[ DOWNLOAD ]',
         downloadDesc: 'Ready to capture in vintage film?',
         downloadCta: 'DOWNLOAD ON APP STORE',
         downloadReq: 'Requires iOS 16.0 or later \u00b7 Free',
-        footerPrivacy: 'Privacy', footerTerms: 'Terms', footerContact: 'Contact'
+        footerPrivacy: 'Privacy'
       },
       ko: {
         navAbout: '[소개]', navPresets: '[프리셋]', navFeatures: '[기능]',
-        navSpecs: '[사양]', navDownload: '[다운로드]',
+        navDownload: '[다운로드]',
         heroSub: '\ube48\ud2f0\uc9c0 \ud544\ub984 \uc2dc\ubbac\ub808\uc774\uc158 \uce74\uba54\ub77c',
         heroDesc: '\ud544\ub984\uc758 \uc2dc\ub300\ub97c \ub2f4\ub294 \uce74\uba54\ub77c. 1930\ub144\ub300 \ub274\uc2a4\ub9b4\ubd80\ud130 \ud604\ub300 \ub514\uc9c0\ud138\uae4c\uc9c0 \u2014 \ubaa8\ub4e0 \uc2dc\ub300\ub97c \ub2f9\uc2e0\uc758 \uc190\ub05d\uc5d0.',
         heroCta: 'APP STORE\uc5d0\uc11c \ub2e4\uc6b4\ub85c\ub4dc',
@@ -1080,22 +1014,15 @@
         feat5Title: '\uc0ac\uc9c4 & \ub3d9\uc601\uc0c1', feat5Desc: '\ubaa8\ub4e0 \ud544\ud130\uac00 \uc801\uc6a9\ub41c \uc0c1\ud0dc\ub85c \uc0ac\uc9c4 \ucd2c\uc601\uacfc \ub3d9\uc601\uc0c1 \ub179\ud654. H.264 \uc778\ucf54\ub529, EXIF \uba54\ud0c0\ub370\uc774\ud130 \ubc0f GPS \uc704\uce58 \uc800\uc7a5.',
         feat6Title: '\ub2e4\uad6d\uc5b4 \uc9c0\uc6d0', feat6Desc: '\uc601\uc5b4, \ud55c\uad6d\uc5b4, \uc77c\ubcf8\uc5b4, \uc911\uad6d\uc5b4 \uac04\uccb4/\ubc88\uccb4 \uc644\ubcbd \uc9c0\uc6d0. \uc5b8\uc5b4\ubcc4 \ud53d\uc140 \ud3f0\ud2b8\ub85c \uc815\ud1b5 \ub514\uc2a4\ud50c\ub808\uc774.',
         galleryTitle: '[ \uac24\ub7ec\ub9ac ]',
-        specsTitle: '[ \uc2dc\uc2a4\ud15c \uc694\uad6c\uc0ac\ud56d ]',
-        spec1: '<span>\ud50c\ub7ab\ud3fc</span>: iOS 16.0+',
-        spec2: '<span>GPU</span>: Metal \ud638\ud658 \ub514\ubc14\uc774\uc2a4',
-        spec3: '<span>\uce74\uba54\ub77c</span>: \uc804\uba74 & \ud6c4\uba74 \uce74\uba54\ub77c',
-        spec4: '<span>\ucd2c\uc601</span>: 4:3 (1920\u00d71440)',
-        spec5: '<span>\ub3d9\uc601\uc0c1</span>: H.264 / AAC @ 24fps',
-        spec6: '<span>\uc5b8\uc5b4</span>: EN, KO, JA, ZH-Hans, ZH-Hant',
         downloadTitle: '[ \ub2e4\uc6b4\ub85c\ub4dc ]',
         downloadDesc: '\ube48\ud2f0\uc9c0 \ud544\ub984\uc73c\ub85c \ucd2c\uc601\ud560 \uc900\ube44\uac00 \ub418\uc168\ub098\uc694?',
         downloadCta: 'APP STORE\uc5d0\uc11c \ub2e4\uc6b4\ub85c\ub4dc',
         downloadReq: 'iOS 16.0 \uc774\uc0c1 \ud544\uc694 \u00b7 \ubb34\ub8cc',
-        footerPrivacy: '\uac1c\uc778\uc815\ubcf4', footerTerms: '\uc774\uc6a9\uc57d\uad00', footerContact: '\ubb38\uc758'
+        footerPrivacy: '\uac1c\uc778\uc815\ubcf4'
       },
       ja: {
         navAbout: '[\u6982\u8981]', navPresets: '[\u30d7\u30ea\u30bb\u30c3\u30c8]', navFeatures: '[\u6a5f\u80fd]',
-        navSpecs: '[\u4ed5\u69d8]', navDownload: '[\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9]',
+        navDownload: '[\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9]',
         heroSub: '\u30f4\u30a3\u30f3\u30c6\u30fc\u30b8\u30d5\u30a3\u30eb\u30e0\u30b7\u30df\u30e5\u30ec\u30fc\u30b7\u30e7\u30f3\u30ab\u30e1\u30e9',
         heroDesc: '\u30d5\u30a3\u30eb\u30e0\u306e\u6642\u4ee3\u3092\u5199\u3059\u30ab\u30e1\u30e9\u30021930\u5e74\u4ee3\u306e\u30cb\u30e5\u30fc\u30b9\u30ea\u30fc\u30eb\u304b\u3089\u73fe\u4ee3\u30c7\u30b8\u30bf\u30eb\u307e\u3067 \u2014 \u3059\u3079\u3066\u306e\u6642\u4ee3\u3092\u3042\u306a\u305f\u306e\u624b\u306b\u3002',
         heroCta: 'APP STORE\u3067\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9',
@@ -1123,18 +1050,11 @@
         feat5Title: '\u5199\u771f & \u52d5\u753b', feat5Desc: '\u3059\u3079\u3066\u306e\u30d5\u30a3\u30eb\u30bf\u30fc\u3092\u9069\u7528\u3057\u305f\u307e\u307e\u5199\u771f\u64ae\u5f71\u3068\u52d5\u753b\u9332\u753b\u3002H.264\u30a8\u30f3\u30b3\u30fc\u30c7\u30a3\u30f3\u30b0\u3001EXIF\u30e1\u30bf\u30c7\u30fc\u30bf\u3001GPS\u4f4d\u7f6e\u60c5\u5831\u4fdd\u5b58\u3002',
         feat6Title: '\u591a\u8a00\u8a9e\u5bfe\u5fdc', feat6Desc: '\u82f1\u8a9e\u3001\u97d3\u56fd\u8a9e\u3001\u65e5\u672c\u8a9e\u3001\u4e2d\u56fd\u8a9e\u7c21\u4f53\u5b57/\u7e41\u4f53\u5b57\u5b8c\u5168\u5bfe\u5fdc\u3002\u8a00\u8a9e\u5225\u30d4\u30af\u30bb\u30eb\u30d5\u30a9\u30f3\u30c8\u3067\u6b63\u7d71\u30c7\u30a3\u30b9\u30d7\u30ec\u30a4\u3002',
         galleryTitle: '[ \u30ae\u30e3\u30e9\u30ea\u30fc ]',
-        specsTitle: '[ \u30b7\u30b9\u30c6\u30e0\u8981\u4ef6 ]',
-        spec1: '<span>\u30d7\u30e9\u30c3\u30c8\u30d5\u30a9\u30fc\u30e0</span>: iOS 16.0+',
-        spec2: '<span>GPU</span>: Metal\u5bfe\u5fdc\u30c7\u30d0\u30a4\u30b9',
-        spec3: '<span>\u30ab\u30e1\u30e9</span>: \u524d\u9762 & \u80cc\u9762\u30ab\u30e1\u30e9',
-        spec4: '<span>\u64ae\u5f71</span>: 4:3 (1920\u00d71440)',
-        spec5: '<span>\u52d5\u753b</span>: H.264 / AAC @ 24fps',
-        spec6: '<span>\u8a00\u8a9e</span>: EN, KO, JA, ZH-Hans, ZH-Hant',
         downloadTitle: '[ \u30c0\u30a6\u30f3\u30ed\u30fc\u30c9 ]',
         downloadDesc: '\u30f4\u30a3\u30f3\u30c6\u30fc\u30b8\u30d5\u30a3\u30eb\u30e0\u3067\u64ae\u5f71\u3059\u308b\u6e96\u5099\u306f\u3067\u304d\u307e\u3057\u305f\u304b\uff1f',
         downloadCta: 'APP STORE\u3067\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9',
         downloadReq: 'iOS 16.0\u4ee5\u964d\u304c\u5fc5\u8981 \u00b7 \u7121\u6599',
-        footerPrivacy: '\u30d7\u30e9\u30a4\u30d0\u30b7\u30fc', footerTerms: '\u5229\u7528\u898f\u7d04', footerContact: '\u304a\u554f\u3044\u5408\u308f\u305b'
+        footerPrivacy: '\u30d7\u30e9\u30a4\u30d0\u30b7\u30fc'
       }
     };
 
